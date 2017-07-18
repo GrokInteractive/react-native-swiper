@@ -2,12 +2,13 @@
  * react-native-swiper
  * @author leecade<leecade@163.com>
  */
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import {
   Text,
   View,
+  ViewPropTypes,
   ScrollView,
-  Dimensions,
   TouchableOpacity,
   ViewPagerAndroid,
   Platform,
@@ -100,7 +101,8 @@ export default class extends Component {
   static propTypes = {
     horizontal: PropTypes.bool,
     children: PropTypes.node.isRequired,
-    style: View.propTypes.style,
+    style: ViewPropTypes.style,
+    contentStyle: ViewPropTypes.style,
     pagingEnabled: PropTypes.bool,
     showsHorizontalScrollIndicator: PropTypes.bool,
     showsVerticalScrollIndicator: PropTypes.bool,
@@ -549,8 +551,8 @@ export default class extends Component {
       return (
         <ScrollView ref='scrollView'
           {...this.props}
-          {...this.scrollViewPropOverrides()}
-          contentContainerStyle={[styles.wrapper, this.props.style]}
+          {...this.scrollViewPropOverrides() }
+          contentContainerStyle={[styles.wrapper, this.props.contentStyle]}
           contentOffset={this.state.offset}
           onScrollBeginDrag={this.onScrollBegin}
           onMomentumScrollEnd={this.onScrollEnd}
@@ -625,10 +627,7 @@ export default class extends Component {
     }
 
     return (
-      <View style={[styles.container, {
-        width: state.width,
-        height: state.height
-      }]}>
+      <View style={[styles.container, this.props.style]}>
         {this.renderScrollView(pages)}
         {props.showsPagination && (props.renderPagination
           ? this.props.renderPagination(state.index, state.total, this)
