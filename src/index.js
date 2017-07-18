@@ -2,19 +2,18 @@
  * react-native-swiper
  * @author leecade<leecade@163.com>
  */
-import React, { Component, PropTypes } from 'react'
+import React, { Component } from 'react'
+import PropTypes from 'prop-types'
 import {
   Text,
   View,
+  ViewPropTypes,
   ScrollView,
-  Dimensions,
   TouchableOpacity,
   ViewPagerAndroid,
   Platform,
   ActivityIndicator
 } from 'react-native'
-
-const { width, height } = Dimensions.get('window')
 
 /**
  * Default styles
@@ -23,7 +22,8 @@ const { width, height } = Dimensions.get('window')
 const styles = {
   container: {
     backgroundColor: 'transparent',
-    position: 'relative'
+    position: 'relative',
+    flex: 1
   },
 
   wrapper: {
@@ -100,7 +100,8 @@ export default class extends Component {
   static propTypes = {
     horizontal: PropTypes.bool,
     children: PropTypes.node.isRequired,
-    style: View.propTypes.style,
+    style: ViewPropTypes.style,
+    contentStyle: ViewPropTypes.style,
     pagingEnabled: PropTypes.bool,
     showsHorizontalScrollIndicator: PropTypes.bool,
     showsVerticalScrollIndicator: PropTypes.bool,
@@ -154,7 +155,7 @@ export default class extends Component {
    * Init states
    * @return {object} states
    */
-  state = this.initState(this.props, true)
+  state = this.initState(this.props)
 
   /**
    * autoplay timer
@@ -163,25 +164,23 @@ export default class extends Component {
   autoplayTimer = null
   loopJumpTimer = null
 
-  componentWillReceiveProps (nextProps) {
-    const sizeChanged = (nextProps.width || width) !== this.state.width ||
-                        (nextProps.height || height) !== this.state.height
+  componentWillReceiveProps(nextProps) {
     if (!nextProps.autoplay && this.autoplayTimer) clearTimeout(this.autoplayTimer)
-    this.setState(this.initState(nextProps, sizeChanged))
+    this.setState(this.initState(nextProps))
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this.autoplay()
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     this.autoplayTimer && clearTimeout(this.autoplayTimer)
     this.loopJumpTimer && clearTimeout(this.loopJumpTimer)
   }
 
-  initState (props, setOffsetInState) {
+  initState(props) {
     // set the current state
-    const state = this.state || {}
+    const state = this.state || { width: 0, height: 0, offset: { x: 0, y: 0 } }
 
     const initState = {
       autoplayEnd: false,
@@ -198,40 +197,42 @@ export default class extends Component {
       // retain the index
       initState.index = state.index
     } else {
-      // reset the index
-      setOffsetInState = true // if the index is reset, go ahead and update the offset in state
       initState.index = initState.total > 1 ? Math.min(props.index, initState.total - 1) : 0
     }
 
     // Default: horizontal
     initState.dir = props.horizontal === false ? 'y' : 'x'
-    initState.width = props.width || width
-    initState.height = props.height || height
-    newInternals.offset = {}
-
-    if (initState.total > 1) {
-      let setup = initState.index
-      if (props.loop) {
-        setup++
-      }
-      newInternals.offset[initState.dir] = initState.dir === 'y'
-        ? initState.height * setup
-        : initState.width * setup
-    }
-
-    // only update the offset in state if needed, updating offset while swiping
-    // causes some bad jumping / stuttering
-    if (setOffsetInState) {
-      initState.offset = newInternals.offset
-    }
 
     this.internals = newInternals
     return initState
   }
 
   // include internals with state
-  fullState () {
+  fullState() {
     return Object.assign({}, this.state, this.internals)
+  }
+
+  setDimensions = (event) => {
+    const { width, height } = event.nativeEvent.layout
+    const offset = this.internals.offset = {}
+    const state = { width, height }
+
+    if (this.state.total > 1) {
+      let setup = this.state.index
+      if (this.props.loop) {
+        setup++
+      }
+      offset[this.state.dir] = this.state.dir === 'y'
+        ? height * setup
+        : width * setup
+    }
+
+    // only update the offset in state if needed, updating offset while swiping
+    // causes some bad jumping / stuttering
+    if (width !== this.state.width || height !== this.state.height) {
+      state.offset = offset
+    }
+    this.setState(state)
   }
 
   loopJump = () => {
@@ -254,10 +255,10 @@ export default class extends Component {
     this.autoplayTimer && clearTimeout(this.autoplayTimer)
     this.autoplayTimer = setTimeout(() => {
       if (!this.props.loop && (
-          this.props.autoplayDirection
-            ? this.state.index === this.state.total - 1
-            : this.state.index === 0
-        )
+        this.props.autoplayDirection
+          ? this.state.index === this.state.total - 1
+          : this.state.index === 0
+      )
       ) return this.setState({ autoplayEnd: true })
 
       this.scrollBy(this.props.autoplayDirection ? 1 : -1)
@@ -285,9 +286,9 @@ export default class extends Component {
     // making our events coming from android compatible to updateIndex logic
     if (!e.nativeEvent.contentOffset) {
       if (this.state.dir === 'x') {
-        e.nativeEvent.contentOffset = {x: e.nativeEvent.position * this.state.width}
+        e.nativeEvent.contentOffset = { x: e.nativeEvent.position * this.state.width }
       } else {
-        e.nativeEvent.contentOffset = {y: e.nativeEvent.position * this.state.height}
+        e.nativeEvent.contentOffset = { y: e.nativeEvent.position * this.state.height }
       }
     }
 
@@ -451,7 +452,7 @@ export default class extends Component {
    * @return {object} react-dom
    */
   renderPagination = () => {
-     // By default, dots only show when `total` >= 2
+    // By default, dots only show when `total` >= 2
     if (this.state.total <= 1) return null
 
     let dots = []
@@ -474,11 +475,11 @@ export default class extends Component {
       marginRight: 3,
       marginTop: 3,
       marginBottom: 3
-    }, this.props.dotStyle ]} />
+    }, this.props.dotStyle]} />
     for (let i = 0; i < this.state.total; i++) {
       dots.push(i === this.state.index
-        ? React.cloneElement(ActiveDot, {key: i})
-        : React.cloneElement(Dot, {key: i})
+        ? React.cloneElement(ActiveDot, { key: i })
+        : React.cloneElement(Dot, { key: i })
       )
     }
 
@@ -549,22 +550,22 @@ export default class extends Component {
       return (
         <ScrollView ref='scrollView'
           {...this.props}
-          {...this.scrollViewPropOverrides()}
-          contentContainerStyle={[styles.wrapper, this.props.style]}
+          {...this.scrollViewPropOverrides() }
+          contentContainerStyle={[styles.wrapper, this.props.contentStyle]}
           contentOffset={this.state.offset}
           onScrollBeginDrag={this.onScrollBegin}
           onMomentumScrollEnd={this.onScrollEnd}
           onScrollEndDrag={this.onScrollEndDrag}>
           {pages}
         </ScrollView>
-       )
+      )
     }
     return (
       <ViewPagerAndroid ref='scrollView'
         {...this.props}
         initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
         onPageSelected={this.onScrollEnd}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
         {pages}
       </ViewPagerAndroid>
     )
@@ -574,7 +575,7 @@ export default class extends Component {
    * Default render
    * @return {object} react-dom
    */
-  render () {
+  render() {
     const state = this.state
     const props = this.props
     const children = props.children
@@ -587,7 +588,7 @@ export default class extends Component {
 
     let pages = []
 
-    const pageStyle = [{width: state.width, height: state.height}, styles.slide]
+    const pageStyle = [{ width: state.width, height: state.height }, styles.slide]
     const pageStyleLoading = {
       width: this.state.width,
       height: this.state.height,
@@ -625,10 +626,7 @@ export default class extends Component {
     }
 
     return (
-      <View style={[styles.container, {
-        width: state.width,
-        height: state.height
-      }]}>
+      <View style={[styles.container, this.props.style]} onLayout={this.setDimensions}>
         {this.renderScrollView(pages)}
         {props.showsPagination && (props.renderPagination
           ? this.props.renderPagination(state.index, state.total, this)
