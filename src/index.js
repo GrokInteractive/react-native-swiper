@@ -169,11 +169,11 @@ export default class extends Component {
     this.setState(this.initState(nextProps))
   }
 
-  componentDidMount () {
+  componentDidMount() {
     this.autoplay()
   }
 
-  componentWillUnmount () {
+  componentWillUnmount() {
     this.autoplayTimer && clearTimeout(this.autoplayTimer)
     this.loopJumpTimer && clearTimeout(this.loopJumpTimer)
   }
@@ -231,7 +231,7 @@ export default class extends Component {
     // causes some bad jumping / stuttering
     if (width !== this.state.width || height !== this.state.height) {
       state.offset = offset
-  }
+    }
     this.setState(state)
   }
 
@@ -255,10 +255,10 @@ export default class extends Component {
     this.autoplayTimer && clearTimeout(this.autoplayTimer)
     this.autoplayTimer = setTimeout(() => {
       if (!this.props.loop && (
-          this.props.autoplayDirection
-            ? this.state.index === this.state.total - 1
-            : this.state.index === 0
-        )
+        this.props.autoplayDirection
+          ? this.state.index === this.state.total - 1
+          : this.state.index === 0
+      )
       ) return this.setState({ autoplayEnd: true })
 
       this.scrollBy(this.props.autoplayDirection ? 1 : -1)
@@ -286,9 +286,9 @@ export default class extends Component {
     // making our events coming from android compatible to updateIndex logic
     if (!e.nativeEvent.contentOffset) {
       if (this.state.dir === 'x') {
-        e.nativeEvent.contentOffset = {x: e.nativeEvent.position * this.state.width}
+        e.nativeEvent.contentOffset = { x: e.nativeEvent.position * this.state.width }
       } else {
-        e.nativeEvent.contentOffset = {y: e.nativeEvent.position * this.state.height}
+        e.nativeEvent.contentOffset = { y: e.nativeEvent.position * this.state.height }
       }
     }
 
@@ -452,7 +452,7 @@ export default class extends Component {
    * @return {object} react-dom
    */
   renderPagination = () => {
-     // By default, dots only show when `total` >= 2
+    // By default, dots only show when `total` >= 2
     if (this.state.total <= 1) return null
 
     let dots = []
@@ -475,11 +475,11 @@ export default class extends Component {
       marginRight: 3,
       marginTop: 3,
       marginBottom: 3
-    }, this.props.dotStyle ]} />
+    }, this.props.dotStyle]} />
     for (let i = 0; i < this.state.total; i++) {
       dots.push(i === this.state.index
-        ? React.cloneElement(ActiveDot, {key: i})
-        : React.cloneElement(Dot, {key: i})
+        ? React.cloneElement(ActiveDot, { key: i })
+        : React.cloneElement(Dot, { key: i })
       )
     }
 
@@ -558,14 +558,14 @@ export default class extends Component {
           onScrollEndDrag={this.onScrollEndDrag}>
           {pages}
         </ScrollView>
-       )
+      )
     }
     return (
       <ViewPagerAndroid ref='scrollView'
         {...this.props}
         initialPage={this.props.loop ? this.state.index + 1 : this.state.index}
         onPageSelected={this.onScrollEnd}
-        style={{flex: 1}}>
+        style={{ flex: 1 }}>
         {pages}
       </ViewPagerAndroid>
     )
@@ -575,7 +575,7 @@ export default class extends Component {
    * Default render
    * @return {object} react-dom
    */
-  render () {
+  render() {
     const state = this.state
     const props = this.props
     const children = props.children
@@ -588,7 +588,7 @@ export default class extends Component {
 
     let pages = []
 
-    const pageStyle = [{width: state.width, height: state.height}, styles.slide]
+    const pageStyle = [{ width: state.width, height: state.height }, styles.slide]
     const pageStyleLoading = {
       width: this.state.width,
       height: this.state.height,
